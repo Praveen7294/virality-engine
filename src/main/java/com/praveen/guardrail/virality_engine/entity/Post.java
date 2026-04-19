@@ -35,11 +35,11 @@ public class Post {
     public Post() {
     }
 
-    public Post(Long authorId, AuthorType authorType, String content, LocalDateTime createdAt) {
+    public Post(Long authorId, AuthorType authorType, String content) {
         this.authorId = authorId;
         this.authorType = authorType;
         this.content = content;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
