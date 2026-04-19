@@ -2,6 +2,8 @@ package com.praveen.guardrail.virality_engine.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -23,6 +25,10 @@ public class Comment {
     @Column(name = "author_id", nullable = false)
     private Long authorId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "author_type", nullable = false)
+    private AuthorType authorType;
+
     private String content;
 
     @Column(name = "depth_level", nullable = false)
@@ -34,9 +40,10 @@ public class Comment {
     public Comment() {
     }
 
-    public Comment(Long postId, Long authorId, String content, Integer depthLevel) {
+    public Comment(Long postId, Long authorId, AuthorType authorType, String content, Integer depthLevel) {
         this.postId = postId;
         this.authorId = authorId;
+        this.authorType = authorType;
         this.content = content;
         this.depthLevel = depthLevel;
         this.createdAt = LocalDateTime.now();
@@ -60,6 +67,14 @@ public class Comment {
 
     public Long getAuthorId() {
         return authorId;
+    }
+
+    public AuthorType getAuthorType() {
+        return authorType;
+    }
+
+    public void setAuthorType(AuthorType authorType) {
+        this.authorType = authorType;
     }
 
     public void setAuthorId(Long authorId) {
