@@ -1,5 +1,7 @@
 package com.praveen.guardrail.virality_engine.dto;
 
+import java.time.LocalDateTime;
+
 public class ErrorResponseDTO {
 
     private final String error;
@@ -8,9 +10,9 @@ public class ErrorResponseDTO {
 
     private final Integer status;
 
-    private final Long timestamp;
+    private final LocalDateTime timestamp;
 
-    public ErrorResponseDTO(String error, String message, Integer status, Long timestamp) {
+    public ErrorResponseDTO(String error, String message, Integer status, LocalDateTime timestamp) {
         this.error = error;
         this.message = message;
         this.status = status;
@@ -29,7 +31,7 @@ public class ErrorResponseDTO {
         return status;
     }
 
-    public Long getTimestamp() {
+    public LocalDateTime getTimestamp() {
         return timestamp;
     }
 }

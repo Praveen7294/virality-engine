@@ -1,8 +1,9 @@
 package com.praveen.guardrail.virality_engine.service;
 
-import com.praveen.guardrail.virality_engine.entity.AuthorType;
+import com.praveen.guardrail.virality_engine.dto.PostRequestDTO;
+import com.praveen.guardrail.virality_engine.dto.PostResponseDTO;
 import com.praveen.guardrail.virality_engine.entity.Post;
-import com.praveen.guardrail.virality_engine.exception.InvalidAuthorTypeException;
+import com.praveen.guardrail.virality_engine.mapper.PostMapper;
 import com.praveen.guardrail.virality_engine.repository.PostRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,24 +17,12 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public Post createPost(Long authorId, String authorType, String content) {
+    public PostResponseDTO createPost(PostRequestDTO postRequestDTO) {
 
-        AuthorType type;
+        Post post = PostMapper.toEntity(postRequestDTO);
 
-        try {
-            type = AuthorType.valueOf(authorType.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new InvalidAuthorTypeException(
-                    "Invalid Author Type: " + authorType + ". Allowed Author: BOT, USER"
-            );
-        }
+        Post savedPost = postRepository.save(post);
 
-        Post post = new Post(
-                authorId,
-                type,
-                content
-        );
-
-        return postRepository.save(post);
+        return PostMapper.toDTO(savedPost);
     }
 }

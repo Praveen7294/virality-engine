@@ -1,8 +1,9 @@
 package com.praveen.guardrail.virality_engine.service;
 
-import com.praveen.guardrail.virality_engine.entity.Post;
+import com.praveen.guardrail.virality_engine.dto.PostRequestDTO;
+import com.praveen.guardrail.virality_engine.dto.PostResponseDTO;
 
 public interface PostService {
 
-    Post createPost(Long authorId, String authorType, String content);
+    PostResponseDTO createPost(PostRequestDTO postRequestDTO);
 }
