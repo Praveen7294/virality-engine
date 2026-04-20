@@ -3,6 +3,7 @@ package com.praveen.guardrail.virality_engine.controller;
 import com.praveen.guardrail.virality_engine.dto.PostRequestDTO;
 import com.praveen.guardrail.virality_engine.dto.PostResponseDTO;
 import com.praveen.guardrail.virality_engine.service.PostService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +22,7 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<PostResponseDTO> createPost(@RequestBody PostRequestDTO postRequestDTO) {
+    public ResponseEntity<PostResponseDTO> createPost(@Valid @RequestBody PostRequestDTO postRequestDTO) {
 
         PostResponseDTO postResponseDTO = postService.createPost(postRequestDTO);
 

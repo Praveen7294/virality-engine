@@ -7,6 +7,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.time.LocalDateTime;
@@ -34,18 +36,24 @@ public class Comment {
     @Column(name = "depth_level", nullable = false)
     private Integer depthLevel;
 
+    @ManyToOne
+    @JoinColumn(name = "parent_comment_id")
+    private Comment parentComment;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     public Comment() {
     }
 
-    public Comment(Long postId, Long authorId, AuthorType authorType, String content, Integer depthLevel) {
+    public Comment(Long postId, Long authorId, AuthorType authorType,
+                   String content, Integer depthLevel, Comment parentComment) {
         this.postId = postId;
         this.authorId = authorId;
         this.authorType = authorType;
         this.content = content;
         this.depthLevel = depthLevel;
+        this.parentComment = parentComment;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -95,6 +103,14 @@ public class Comment {
 
     public void setDepthLevel(Integer depthLevel) {
         this.depthLevel = depthLevel;
+    }
+
+    public Comment getParentComment() {
+        return parentComment;
+    }
+
+    public void setParentComment(Comment parentComment) {
+        this.parentComment = parentComment;
     }
 
     public LocalDateTime getCreatedAt() {
