@@ -20,10 +20,15 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final ViralityService viralityService;
 
-    public CommentServiceImpl(CommentRepository commentRepository, PostRepository postRepository) {
+    public CommentServiceImpl(
+            CommentRepository commentRepository,
+            PostRepository postRepository,
+            ViralityService viralityService) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
+        this.viralityService = viralityService;
     }
 
     @Override
@@ -49,7 +54,7 @@ public class CommentServiceImpl implements CommentService {
                         "Comment depth level limit exceeded, max 20 allowed.");
             }
 
-            // post id validation with post id in comment
+            // post id validation with post id of comment
             if (!parentComment.getPostId().equals(postId)) {
                 throw new CommentPostMismatchException("Parent comment does not belong to this post.");
             }
@@ -58,6 +63,8 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = CommentMapper.toEntity(post.getId(), depthLevel, parentComment, commentRequestDTO);
 
         Comment savedComment = commentRepository.save(comment);
+
+        viralityService.handleComment(postId, commentRequestDTO.getAuthorType());
 
         return CommentMapper.toDTO(savedComment);
     }
