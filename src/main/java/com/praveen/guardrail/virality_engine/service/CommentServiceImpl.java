@@ -2,6 +2,7 @@ package com.praveen.guardrail.virality_engine.service;
 
 import com.praveen.guardrail.virality_engine.dto.CommentRequestDTO;
 import com.praveen.guardrail.virality_engine.dto.CommentResponseDTO;
+import com.praveen.guardrail.virality_engine.entity.AuthorType;
 import com.praveen.guardrail.virality_engine.entity.Comment;
 import com.praveen.guardrail.virality_engine.entity.Post;
 import com.praveen.guardrail.virality_engine.exception.CommentDepthLimitExceededException;
@@ -58,6 +59,11 @@ public class CommentServiceImpl implements CommentService {
             if (!parentComment.getPostId().equals(postId)) {
                 throw new CommentPostMismatchException("Parent comment does not belong to this post.");
             }
+        }
+
+        if (commentRequestDTO.getAuthorType() == AuthorType.BOT) {
+            viralityService.handleCooldown(commentRequestDTO.getAuthorId(), post, parentComment);
+            viralityService.handleBotCount(postId);
         }
 
         Comment comment = CommentMapper.toEntity(post.getId(), depthLevel, parentComment, commentRequestDTO);

@@ -92,6 +92,36 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(errorResponseDTO);
     }
 
+    @ExceptionHandler(TooManyBotRepliesException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTooManyBotRepliesException(TooManyBotRepliesException ex) {
+
+        logger.error("Too many bot replies: {}", ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "TOO_MANY_REPLIES",
+                ex.getMessage(),
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponseDTO);
+    }
+
+    @ExceptionHandler(BotCoolDownException.class)
+    public ResponseEntity<ErrorResponseDTO> handleBotCoolDownException(BotCoolDownException ex) {
+
+        logger.error("Bot cool down: {}", ex.getMessage());
+
+        ErrorResponseDTO errorResponseDTO = new ErrorResponseDTO(
+                "COOLDOWN_ACTIVE",
+                ex.getMessage(),
+                HttpStatus.TOO_MANY_REQUESTS.value(),
+                LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(errorResponseDTO);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGenericException(Exception ex) {
 
