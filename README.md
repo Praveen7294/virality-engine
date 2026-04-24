@@ -14,7 +14,7 @@ This project focuses on:
 
 ### Tech Stack
 
-- Java 21
+- Java 17
 - Spring Boot
 - PostgreSQL (Persistent storage)
 - Redis (In-memory processing)
@@ -99,82 +99,81 @@ System is tested against:
 
 This project follows a **layered monolithic architecture with Redis-backed real-time processing**.
 
-It is not a microservicces architecture. The application is a single Spring Boot backend, but responsibilities are separated into layers and services.
+It is not a microservices architecture. The application is a single Spring Boot backend, but responsibilities are separated into layers and services.
 
 **Architecture Type:** Layered Monolithic + Redis Gatekeeper Pattern
 
-### Project Structure
+## Thread Safety Approach for Atomic Locks
 
-```java
-virality-engine/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/praveen/guardrail/virality_engine/
-│   │   │       ├── controller/
-│   │   │       │   ├── PostController.java
-│   │   │       │   ├── CommentController.java
-│   │   │       │   └── LikeController.java
-│   │   │       │
-│   │   │       ├── dto/
-│   │   │       │   ├── PostRequestDTO.java
-│   │   │       │   ├── PostResponseDTO.java
-│   │   │       │   ├── CommentRequestDTO.java
-│   │   │       │   ├── CommentResponseDTO.java
-│   │   │       │   └── ErrorResponseDTO.java
-│   │   │       │
-│   │   │       ├── entity/
-│   │   │       │   ├── User.java
-│   │   │       │   ├── Bot.java
-│   │   │       │   ├── Post.java
-│   │   │       │   ├── Comment.java
-│   │   │       │   └── AuthorType.java
-│   │   │       │
-│   │   │       ├── exception/
-│   │   │       │   ├── GlobalExceptionHandler.java
-│   │   │       │   ├── PostNotFoundException.java
-│   │   │       │   ├── CommentNotFoundException.java
-│   │   │       │   ├── TooManyBotRepliesException.java
-│   │   │       │   ├── BotCoolDownException.java
-│   │   │       │   ├── CommentDepthLimitExceededException.java
-│   │   │       │   └── CommentPostMismatchException.java
-│   │   │       │
-│   │   │       ├── mapper/
-│   │   │       │   ├── PostMapper.java
-│   │   │       │   └── CommentMapper.java
-│   │   │       │
-│   │   │       ├── repository/
-│   │   │       │   ├── UserRepository.java
-│   │   │       │   ├── BotRepository.java
-│   │   │       │   ├── PostRepository.java
-│   │   │       │   └── CommentRepository.java
-│   │   │       │
-│   │   │       ├── service/
-│   │   │       │   ├── PostService.java
-│   │   │       │   ├── PostServiceImpl.java
-│   │   │       │   ├── CommentService.java
-│   │   │       │   ├── CommentServiceImpl.java
-│   │   │       │   ├── LikeService.java
-│   │   │       │   ├── LikeServiceImpl.java
-│   │   │       │   ├── ViralityService.java
-│   │   │       │   └── NotificationService.java
-│   │   │       │
-│   │   │       ├── util/
-│   │   │       │   ├── ViralityUtil.java
-│   │   │       │   └── InteractionType.java
-│   │   │       │
-│   │   │       └── ViralityEngineApplication.java
-│   │   │
-│   │   └── resources/
-│   │       └── application.properties
-│   │
-│   └── test/
-│
-├── docker-compose.yml
-├── pom.xml
-├── README.md
-└── .gitignore
+Redis-based atomic locks to protect the system from race conditions, especially when many bots interact with the same post at the same time.
+
+The application does not use Java in-memory variables like `HashMap`, `static`, counters, or synchronized blocks. Instead, all counters and locks are stored in Redis.
+
+### Horizontal Cap: Bot Reply Limit
+
+To limit a post to a maximum of 100 bot replies, the system uses Redis atomic increment:
+
 ```
+post:{postId}:bot_count
+```
+
+When bot tries to comment, the service executes:
+```
+Long count = redisTemplate.opsForValue().increment(botCountKey);
+
+if (count > 100) {
+    throw new TooManyBotRepliesException("Bot reply limit exceeded max 100 allowed.");
+}
+```
+
+Redis `INCR` is atomic, meaning even if 200 bot requests arrive at the same millisecond, Redis processes each increment one by one. This guarantees that only the first 100 bot comments are allowed and the remaining requests are rejected with HTTP 429.
+
+### Cooldown Lock
+
+To prevent the same bot from interacting with the same human repeatedly within 10 minutes, the system uses Redis `SETNX` behavior through `SetIfAbsent`.
+```
+cooldown:bot_{botId}:human_{humanId}
+```
+```
+Boolean success = redisTemplate.opsForValue()
+        .setIfAbsent(cooldownKey, "1", 600, TimeUnit.SECONDS);
+
+if (Boolean.FALSE.equals(success)) {
+    throw new BotCoolDownException("Bot already interacted with this user recently");
+}
+```
+
+`SetIfAbsent` is atomic. If two requests from the same bot arrive at the same time, only one request can create the cooldown key. The other request sees that the key already exists and is rejected.
+
+### Why This is Thread-Safe
+
+The system avoids the unsafe pattern:
+```
+Read value → Check value → Update value
+```
+because this can fail under concurrent requests.
+
+Instead, it uses Redis atomic operations:
+```
+INCR
+SETNX with TTL
+```
+These operations are executed atomically inside Redis, so race conditions are avoided even when multiple applications threads handle requests at the same time.
+
+### Data Integrity
+
+Redis guardrails are checked before saving the comment in PostgreSQL.
+
+```
+Request
+  ↓
+Redis Guardrails
+  ↓
+If allowed → Save comment in PostgreSQL
+If rejected → No database write
+```
+This ensures PostgreSQL store only valid content while Redis acts as the real-time gatekeeper.
+
 
 ## API Testing
 

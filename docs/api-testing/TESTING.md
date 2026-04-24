@@ -6,7 +6,7 @@ This guide explains how to test the virality Engine project using Docker, Postgr
 
 Make sure the following are installed:
 
-- Java 21
+- Java 17
 - Maven 3.9.9
 - Docker
 - Postman
