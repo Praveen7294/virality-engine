@@ -22,14 +22,17 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final ViralityService viralityService;
+    private final NotificationService notificationService;
 
     public CommentServiceImpl(
             CommentRepository commentRepository,
             PostRepository postRepository,
-            ViralityService viralityService) {
+            ViralityService viralityService,
+            NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
         this.viralityService = viralityService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -70,6 +73,12 @@ public class CommentServiceImpl implements CommentService {
 
         Comment savedComment = commentRepository.save(comment);
 
+        if (commentRequestDTO.getAuthorType() == AuthorType.BOT && post.getAuthorType() == AuthorType.USER) {
+            String message = "Bot " + commentRequestDTO.getAuthorId() + " replied to your post";
+            notificationService.handleBotInteraction(post.getAuthorId(), message);
+        }
+
+        // increase virality score
         viralityService.handleComment(postId, commentRequestDTO.getAuthorType());
 
         return CommentMapper.toDTO(savedComment);

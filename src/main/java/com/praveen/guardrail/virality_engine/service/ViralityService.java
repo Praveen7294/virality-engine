@@ -24,6 +24,7 @@ public class ViralityService {
         this.stringRedisTemplate = stringRedisTemplate;
     }
 
+    // virality logic
     public void handleLike(Long postId, AuthorType authorType) {
 
         String likeKey = "post:" + postId + ":likes";
@@ -36,6 +37,7 @@ public class ViralityService {
         stringRedisTemplate.opsForValue().increment(scoreKey, score);
     }
 
+    // virality logic
     public void handleComment(Long postId, AuthorType authorType) {
 
         String scoreKey = "post:" + postId + ":virality_score";
@@ -44,6 +46,7 @@ public class ViralityService {
         stringRedisTemplate.opsForValue().increment(scoreKey, score);
     }
 
+    // handle bot count on post
     public void handleBotCount(Long postId) {
 
         String botCountKey = "post:" + postId + ":bot_count";
@@ -55,6 +58,7 @@ public class ViralityService {
         }
     }
 
+    // handle bot interaction with same user and set cooldown
     public void handleCooldown(Long botId, Post post, Comment parentComment) {
 
         Long humanId = null;
