@@ -175,3 +175,9 @@ virality-engine/
 ├── README.md
 └── .gitignore
 ```
+
+## API Testing
+
+see [TESTING.md](docs/api-testing/TESTING.md) for step by step testing instructions.
+
+Postman collection is available in [docs/api-testing/](docs/api-testing).
